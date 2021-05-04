@@ -23,28 +23,34 @@ device="cpu"
                 
          
                 
-MODEL_NUMBER=0
-stage='3'
-world='8'
-LEVEL=world+'-'+stage
-PATH='./model/{}/ActorCritic_{}.pkl'.format(LEVEL,MODEL_NUMBER)
+
+
+
                
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--world", type=int, default=1)
     parser.add_argument("--stage", type=int, default=1)
-    parser.add_argument("--action_type", type=str, default="complex")
-    parser.add_argument("--saved_path", type=str, default="trained_models")
     args = parser.parse_args()
     return args
 
 
 if __name__=='__main__':
     args=get_args()
+    LEVEL=str(args.world)+'-'+str(args.stage)
 
+    folder='./model/{}'.format(LEVEL)
+
+    if(not  os.path.exists(folder)):
+        os.mkdir(folder)
+    
     global_model=ActorCritic()
     optimizer=SharedAdam(global_model.parameters(),lr=1e-4)
+
+    PATH='./model/{}/A3C_{}.pkl'.format(LEVEL,LEVEL) 
+
+
     if(os.path.exists(PATH)):
         print('Loaded Model')
         check_point=torch.load(PATH)

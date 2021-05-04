@@ -54,7 +54,7 @@ def test(global_model,device,args,delay=0):
         c_0 = c_0.to(device)
 
         env.render()
-        p,value,h_0,c_0=model(state,h_0,c_0)
+        p,_,h_0,c_0=model(state,h_0,c_0)
         policy=F.softmax(p,dim=1)
         action=torch.argmax(policy)
         
@@ -62,7 +62,7 @@ def test(global_model,device,args,delay=0):
         #action=m.sample()
 
         
-        next_state, reward, done, info = env.step(action.item())
+        next_state, _, done, info = env.step(action.item())
         
         next_state=(next_state).to(device,dtype=torch.float)
         next_state=next_state.view(1,1,80,80)
