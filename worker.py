@@ -14,7 +14,7 @@ import os
 import time
 from torch.distributions import Categorical
 import random
-from Brain import push_and_pull
+from utility import push_and_pull
 import torch.multiprocessing as mp
 
 
@@ -42,7 +42,7 @@ TAU=1.0
 
 
 class Worker(mp.Process):
-    def __init__(self,i,global_model,opt,device,world,stage,save=False):
+    def __init__(self,i,global_model,opt,device,args,save=False):
         super(Worker,self).__init__()
         self.name='Worker%i'%i
         self.device=device
@@ -58,9 +58,9 @@ class Worker(mp.Process):
         self.optimizer=opt
         self.global_model=global_model
         self.save=save
-        self.stage=stage
-        self.world=world
-        self.level=world+'-'+stage
+        self.stage=args.stage
+        self.world=args.world
+        self.level=str(self.world)+'-'+str(self.stage)
     def run(self):
         #self.global_model=self.global_model.to(self.device)
         torch.manual_seed(random.randint(1,1000))
@@ -192,7 +192,7 @@ class Worker(mp.Process):
             
             if(self.save):
                 if(i_epoch%500==0):
-                    PATH='./model/{}/2ActorCritic_{}-{}_{}.pkl'.format(self.level,self.world,self.stage,i_epoch)
+                    PATH='./model/{}/A3C_{}.pkl'.format(self.level,self.level)
                     torch.save({
                                 'epoch': i_epoch,
                                 'model_state_dict': self.global_model.state_dict(),

@@ -28,7 +28,9 @@ def push_and_pull(opt, local_model, global_model, loss):
     # pull global parameters
     local_model.load_state_dict(global_model.state_dict())
     
-def test(global_model,device,world,stage,delay=0):
+def test(global_model,device,args,delay=0):
+    world=args.world
+    stage=args.stage
     env = create_env(world,stage)
     device=device
     state=env.reset()
