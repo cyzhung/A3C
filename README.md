@@ -1,7 +1,6 @@
 # A3C
-Use A3C algorithm to play super mario bros
-## Environment
-### Python package:  
+Use Asychronous Advantage Actor-Critic algorithm to play super mario bros
+## Environment 
 pytorch  1.8.1+cu102  
 numpy 1.20.2  
 gym  0.18.0  
