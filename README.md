@@ -32,4 +32,4 @@ to
 ```python
 NUM_PROCESSES=x
 ```
-in train.py
+in train.py (x is the number whatever you want)
