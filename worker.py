@@ -42,13 +42,13 @@ TAU=1.0
 
 
 class Worker(mp.Process):
-    def __init__(self,i,global_model,opt,device,args,save=False):
+    def __init__(self,i,global_model,opt,device,args,epoch=1,save=False):
         super(Worker,self).__init__()
         self.name='Worker%i'%i
         self.device=device
         self.AC=None
 
-
+        self.epoch=epoch
         self.log_probs=[]
         self.values=[]
         self.rewards=[]
@@ -73,7 +73,7 @@ class Worker(mp.Process):
 
         #state=self.imageProcess(state) 
         Timestamp=50
-        i_epoch=1
+        i_epoch=self.epoch
 
         done=True
         while True:
@@ -192,7 +192,7 @@ class Worker(mp.Process):
             
             if(self.save):
                 if(i_epoch%500==0):
-                    PATH='./model/{}/A3C_{}.pkl'.format(self.level,self.level)
+                    PATH='./model/{}/A3C_{}_{}.pkl'.format(self.level,self.level,i_epoch)
                     torch.save({
                                 'epoch': i_epoch,
                                 'model_state_dict': self.global_model.state_dict(),

@@ -9,7 +9,7 @@ from models import ActorCritic
 import torch.multiprocessing as mp
 import torch.optim as optim
 from worker import Worker
-from utility import test
+from utility import global_test
 from ShareAdam import SharedAdam
 import torch
 import os
@@ -45,17 +45,8 @@ if __name__=='__main__':
         optimizer.load_state_dict(check_point['optimizer_state_dict'])
         global_model.share_memory()
     
-    
-        workers=[mp.Process(target=test,args=(global_model,device,args,0.03))]
-        
+        global_test(global_model,device,args)
 
-        [w.start() for w in workers]
-        
-        
-
-        #workers.append(test_worker)
-        
-        [w.join() for w in workers]
     else:
         print("model {} does not exist!".format(LEVEL))
 
