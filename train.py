@@ -61,7 +61,7 @@ if __name__=='__main__':
     
     global_model.share_memory()
     
-    workers=[Worker(0,global_model,optimizer,device,args,epoch,True)]
+    workers=[Worker(0,global_model,optimizer,device,args,epoch,True,True)]
     test_worker=[mp.Process(target=local_test,args=(global_model,device,args))]
     
     workers=workers+[Worker(i,global_model,optimizer,device,args,epoch) for i in range(1,NUM_PROCESSES)]

@@ -22,7 +22,7 @@ import torch.multiprocessing as mp
 
 
 
-
+Max_epoch=80000
 def optimizer_to(optim, device):
     for param in optim.state.values():
         # Not sure there are any global tensors in the state dict
@@ -42,12 +42,12 @@ TAU=1.0
 
 
 class Worker(mp.Process):
-    def __init__(self,i,global_model,opt,device,args,epoch=1,save=False):
+    def __init__(self,i,global_model,opt,device,args,epoch=1,render=False,save=False):
         super(Worker,self).__init__()
         self.name='Worker%i'%i
         self.device=device
         self.AC=None
-
+        self.render=render
         self.epoch=epoch
         self.log_probs=[]
         self.values=[]
@@ -63,7 +63,6 @@ class Worker(mp.Process):
         self.level=str(self.world)+'-'+str(self.stage)
     def run(self):
         #self.global_model=self.global_model.to(self.device)
-        torch.manual_seed(random.randint(1,1000))
         self.AC=ActorCritic()
         #optimizer_to(self.optimizer,self.device)
         env = create_env(self.world,self.stage)
@@ -72,7 +71,7 @@ class Worker(mp.Process):
         state=(state).to(self.device,dtype=torch.float)
 
         #state=self.imageProcess(state) 
-        Timestamp=50
+        
         i_epoch=self.epoch
 
         done=True
@@ -87,7 +86,7 @@ class Worker(mp.Process):
             h_0 = h_0.to(self.device)
             c_0 = c_0.to(self.device)
 
-            t=0
+            Timestamp=50
             for i in range((Timestamp)):
                 env.render()
                     
@@ -102,9 +101,7 @@ class Worker(mp.Process):
                 m=Categorical(policy)
 
                 action=m.sample()
-
                 next_state, reward, done, info = env.step(action.item())
-
                 #reward=reward/15
                 
 
@@ -121,7 +118,7 @@ class Worker(mp.Process):
                 
                 state=next_state
                 
-                t+=1
+
                 
                 if(done):
                     state=(env.reset())
@@ -167,9 +164,9 @@ class Worker(mp.Process):
             
             
             push_and_pull(self.optimizer, self.AC, self.global_model, total_loss)
-            #print([x.grad for x in self.optimizer.param_groups[0]['params']])
-           # for name, parms in self.C.named_parameters():	
-              #  print('-->name:', name, '-->grad_requirs:',parms.requires_grad,' -->grad_value:',parms.grad)
+
+            #for name, parms in self.C.named_parameters():	
+            #print('-->name:', name, '-->grad_requirs:',parms.requires_grad,' -->grad_value:',parms.grad)
 
             
             if(i_epoch%10==0):
@@ -191,15 +188,16 @@ class Worker(mp.Process):
             del self.entropies[:]
             
             if(self.save):
-                if(i_epoch%500==0):
-                    PATH='./model/{}/A3C_{}_{}.pkl'.format(self.level,self.level,i_epoch)
+                if(i_epoch%100==0):
+                    PATH='./model/{}/A3C_{}.pkl'.format(self.level,self.level)
                     torch.save({
                                 'epoch': i_epoch,
                                 'model_state_dict': self.global_model.state_dict(),
                                 'optimizer_state_dict': self.optimizer.state_dict(),
                                 'loss': total_loss,
+                                'type':'NoLSTM',
                                 }, PATH)
-            if(i_epoch==80000):
+            if(i_epoch==Max_epoch):
                 return
     def chooseAction(self,state):
         distribution=self.A(state)

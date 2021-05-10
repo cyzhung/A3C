@@ -29,36 +29,55 @@ class SkipFrame(gym.Wrapper):
         for i in range(self._skip):
             # Accumulate reward and repeat the same action
             obs, reward, done, info = self.env.step(action)
-            if(reward==-1):
-                reward=-4
+
+
             total_reward += reward
             if done:
-                if info["flag_get"]:
-                    reward += 15
-                else:
-                    reward -= 15
                 break
         return obs, total_reward, done, info
     
 
     
-    
-    
-    
-class CustomReward(Wrapper):
-    def __init__(self, env=None, monitor=None):
-        super(CustomReward, self).__init__(env)
-        self.observation_space = Box(low=0, high=255, shape=(1, 84, 84))
+class RewardFunction(Wrapper):
+    def __init__(self, env=None):
+        super(RewardFunction, self).__init__(env)
         self.curr_score = 0
-        if monitor:
-            self.monitor = monitor
-        else:
-            self.monitor = None
+        self.max_x=0
+    def step(self, action):
+        state, reward, done, info = self.env.step(action)
+        if(reward<0):
+            if(action in range(6,10) and done is False):
+                reward=0
+        """
+        if(reward>0):
+            if(self.max_x>=info['x_pos']):
+                reward=0
+            else:
+                self.max_x=info['x_pos']
+        """
+        reward += (info["score"] - self.curr_score) / 40.
+        self.curr_score = info["score"]
+        if done:
+            if info["flag_get"]:
+                reward += 50
+            else:
+                reward -= 50
+        return state, reward / 10., done, info
+
+    def reset(self):
+        self.curr_score = 0
+        self.max_x=0
+        return (self.env.reset())
+    
+"""
+class RewardFunction(Wrapper):
+    def __init__(self, env=None):
+        super(RewardFunction, self).__init__(env)
+        self.curr_score = 0
 
     def step(self, action):
         state, reward, done, info = self.env.step(action)
-        if self.monitor:
-            self.monitor.record(state)
+        
         reward += (info["score"] - self.curr_score) / 40.
         self.curr_score = info["score"]
         if done:
@@ -71,7 +90,7 @@ class CustomReward(Wrapper):
     def reset(self):
         self.curr_score = 0
         return (self.env.reset())
-
+"""
 class GrayScaleObservation(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
@@ -113,7 +132,7 @@ class ResizeObservation(gym.ObservationWrapper):
 def create_env(world,stage):
     env = gym_super_mario_bros.make( 'SuperMarioBros-{}-{}-v0'.format(world,stage) )
     env = JoypadSpace ( env , COMPLEX_MOVEMENT )
-    env=CustomReward(env)
+    env=  RewardFunction(env)
     env = SkipFrame(env, skip=4)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=80)
