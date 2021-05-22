@@ -7,6 +7,7 @@ Created on Tue Apr 13 17:48:22 2021
 from env import create_env
 import torch
 from models import ActorCritic 
+from models import ActorCritic_LSTM
 import torch.nn.functional as F
 import time
 def push_and_pull(opt, local_model, global_model, loss):
@@ -28,7 +29,7 @@ def push_and_pull(opt, local_model, global_model, loss):
     # pull global parameters
     local_model.load_state_dict(global_model.state_dict())
 
-def global_test(global_model,device,args,delay=0.03):
+def global_test(global_model,device,args,model_type,delay=0.03):
     world=args.world
     stage=args.stage
     env = create_env(world,stage)
@@ -38,7 +39,12 @@ def global_test(global_model,device,args,delay=0.03):
 
     state=state.view(1,1,80,80)
     done=True
-    model=ActorCritic().to(device)
+
+    if(model_type=="LSTM"):
+        model=ActorCritic_LSTM().to(device)
+    else:
+        model=ActorCritic().to(device)
+
     model.eval()
     model.load_state_dict(global_model.state_dict())
     
@@ -90,7 +96,10 @@ def local_test(global_model,device,args,delay=0):
 
     state=state.view(1,1,80,80)
     done=True
-    model=ActorCritic().to(device)
+    if(args.model_type=="LSTM"):
+        model=ActorCritic_LSTM().to(device)
+    else:
+        model=ActorCritic().to(device)
     model.eval()
     model.load_state_dict(global_model.state_dict())
     

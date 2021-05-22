@@ -56,7 +56,7 @@ class ActorCritic(nn.Module):
 
 class ActorCritic_LSTM(nn.Module):
     def __init__(self):
-        super(ActorCritic,self).__init__()
+        super(ActorCritic_LSTM,self).__init__()
         self.conv1=nn.Conv2d(1,32,(3,3),stride=2, padding=1)
         self.conv2=nn.Conv2d(32,32,(3,3),stride=2, padding=1)
         self.conv3=nn.Conv2d(32,32,(3,3),stride=2, padding=1)

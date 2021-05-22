@@ -6,6 +6,7 @@ Created on Wed Apr  7 20:36:31 2021
 """
 import torch
 from models import ActorCritic 
+from models import ActorCritic_LSTM
 from env import create_env
 
 import torch.nn.functional as F
@@ -22,7 +23,7 @@ import torch.multiprocessing as mp
 
 
 
-Max_epoch=80000
+Max_epoch=150000
 def optimizer_to(optim, device):
     for param in optim.state.values():
         # Not sure there are any global tensors in the state dict
@@ -58,12 +59,17 @@ class Worker(mp.Process):
         self.optimizer=opt
         self.global_model=global_model
         self.save=save
+        self.args=args
         self.stage=args.stage
         self.world=args.world
         self.level=str(self.world)+'-'+str(self.stage)
     def run(self):
         #self.global_model=self.global_model.to(self.device)
-        self.AC=ActorCritic()
+        if(self.args.model_type == "LSTM"):
+            self.AC=ActorCritic_LSTM()
+        else:
+            self.AC=ActorCritic()
+
         #optimizer_to(self.optimizer,self.device)
         env = create_env(self.world,self.stage)
         state=(env.reset())
@@ -102,6 +108,7 @@ class Worker(mp.Process):
 
                 action=m.sample()
                 next_state, reward, done, info = env.step(action.item())
+
                 #reward=reward/15
                 
 
@@ -126,6 +133,7 @@ class Worker(mp.Process):
                     state=state.to(self.device)
                     #state=self.imageProcess(state)
                     break
+
             """
             actor_loss=0
             critic_loss=0
@@ -158,7 +166,6 @@ class Worker(mp.Process):
                 critic_loss=critic_loss+(R-value)**2/2
                 entropy_loss=entropy_loss+entropy
 
-
             
             total_loss=actor_loss+critic_loss-0.01*entropy_loss
             
@@ -189,13 +196,13 @@ class Worker(mp.Process):
             
             if(self.save):
                 if(i_epoch%100==0):
-                    PATH='./model/{}/A3C_{}.pkl'.format(self.level,self.level)
+                    PATH='./model/{}/A3C_{}_{}.pkl'.format(self.level,self.level,self.args.model_type)
                     torch.save({
                                 'epoch': i_epoch,
                                 'model_state_dict': self.global_model.state_dict(),
                                 'optimizer_state_dict': self.optimizer.state_dict(),
                                 'loss': total_loss,
-                                'type':'NoLSTM',
+                                'type':self.args.model_type,
                                 }, PATH)
             if(i_epoch==Max_epoch):
                 return

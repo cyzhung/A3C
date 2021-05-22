@@ -6,6 +6,7 @@ Created on Wed Apr  7 22:22:03 2021
 """
 
 from models import ActorCritic
+from models import ActorCritic_LSTM
 import torch.multiprocessing as mp
 import torch.optim as optim
 from worker import Worker
@@ -15,7 +16,7 @@ import torch
 import os
 import argparse
 torch.set_num_threads(1)
-NUM_PROCESSES=10
+NUM_PROCESSES=6
 device="cpu"
 
                         
@@ -33,6 +34,7 @@ def get_args():
     parser.add_argument("--world", type=int, default=1)
     parser.add_argument("--stage", type=int, default=1)
     parser.add_argument("--load_model",type=bool,default=False)
+    parser.add_argument("--model_type",type=str,default="normal")
     args = parser.parse_args()
     return args
 
@@ -46,10 +48,15 @@ if __name__=='__main__':
     if(not  os.path.exists(folder)):
         os.mkdir(folder)
     
-    global_model=ActorCritic()
+    if(args.model_type == "LSTM"):
+        global_model=ActorCritic_LSTM()
+    else:
+        global_model=ActorCritic()
+    
+    global_model.to(device)
     optimizer=SharedAdam(global_model.parameters(),lr=1e-4)
 
-    PATH='./model/{}/A3C_{}.pkl'.format(LEVEL,LEVEL) 
+    PATH='./model/{}/A3C_{}_{}.pkl'.format(LEVEL,LEVEL,args.model_type) 
     epoch=1
     if(args.load_model):
         if(os.path.exists(PATH)):

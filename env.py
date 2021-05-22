@@ -20,6 +20,7 @@ class SkipFrame(gym.Wrapper):
     def __init__(self, env, skip):
         """Return only every `skip`-th frame"""
         super().__init__(env)
+
         self._skip = skip
 
     def step(self, action):
@@ -29,8 +30,11 @@ class SkipFrame(gym.Wrapper):
         for i in range(self._skip):
             # Accumulate reward and repeat the same action
             obs, reward, done, info = self.env.step(action)
-
-
+            
+            if(reward<0):
+                if(action in range(6,10) and done is False):
+                   reward/=10
+            
             total_reward += reward
             if done:
                 break
@@ -45,28 +49,20 @@ class RewardFunction(Wrapper):
         self.max_x=0
     def step(self, action):
         state, reward, done, info = self.env.step(action)
-        if(reward<0):
-            if(action in range(6,10) and done is False):
-                reward=0
-        """
-        if(reward>0):
-            if(self.max_x>=info['x_pos']):
-                reward=0
-            else:
-                self.max_x=info['x_pos']
-        """
+       
+        
         reward += (info["score"] - self.curr_score) / 40.
         self.curr_score = info["score"]
         if done:
             if info["flag_get"]:
                 reward += 50
             else:
-                reward -= 50
+                reward -= 350
         return state, reward / 10., done, info
 
     def reset(self):
         self.curr_score = 0
-        self.max_x=0
+
         return (self.env.reset())
     
 """
